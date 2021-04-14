@@ -2,14 +2,13 @@ const puppy = require("puppeteer");
 const fs = require('fs')
 
 const source = "Delhi"; 
-const destination = "Mumbai"; 
+const destination = "Mumbai";
+ 
 let trainResults = {};
 let busResults = {};
 let flightResult = {};
 
 async function main1(browser) {
-    
-
     let tabs = await browser.pages();
     let tab = tabs[0];
     await tab.goto("https://www.irctc.co.in/nget/train-search"); 
@@ -45,19 +44,14 @@ async function main1(browser) {
 
         const trainRows = document.querySelectorAll(TRAIN_ROW_SELECTOR);
         // looping over each team row
-        // let count=0;
         for(const tr of trainRows){
-            // count++;
                 data.push({
                   Name: grabFromRow(tr, "div[class*='train-heading']"),
                   Travel_Time: grabFromRow(tr, "div[class*='line-hr']"),
                   Journey_Start_Time: grabFromRow(tr,"#divMain > div > app-train-list > div.col-sm-9.col-xs-12 > div > div.ng-star-inserted > div:nth-child(1) > div.form-group.no-pad.col-xs-12.bull-back.border-all > app-train-avl-enq > div.ng-star-inserted > div.white-back.no-pad.col-xs-12 > div:nth-child(9) > div:nth-child(1)"),
                   Journey_End_Time: grabFromRow(tr,"#divMain > div > app-train-list > div.col-sm-9.col-xs-12 > div > div.ng-star-inserted > div:nth-child(2) > div.form-group.no-pad.col-xs-12.bull-back.border-all > app-train-avl-enq > div.ng-star-inserted > div.white-back.no-pad.col-xs-12 > div:nth-child(9) > div.col-xs-4.pull-right > span"),
                   Fare: grabFromRow(tr, "span[class='pull-right ng-star-inserted']"),
-                //   seatAvailability: grabFromRow(tr, '#divMain > div > app-train-list > div.col-sm-9.col-xs-12 > div > div.ng-star-inserted > div:nth-child(2) > div.form-group.no-pad.col-xs-12.bull-back.border-all > app-train-avl-enq > div.col-xs-12 > div > span > span > button.btnDefault.disable-book.train_Search.ng-star-inserted')
                  })
-                //  if(count > 4)
-                //     break;
         }
         return data
 });
@@ -74,9 +68,6 @@ var myMap = new Map();
    
 let ans =  JSON.stringify(uniqueArr, null, "\t");
 trainResults=ans;
-// console.log(ans);
-// fs.writeFile('TrainDetails.txt', ans, () => {});
-
 }    
 
 async function main2(browser) {
@@ -84,20 +75,23 @@ async function main2(browser) {
     let tabs = await browser.pages();
     let tab = tabs[0];
     await tab.goto("https://www.redbus.in/"); 
+
     await tab.click("#src");
     await tab.type("#src",source);
     await tab.waitForTimeout(500);
     await tab.keyboard.press("Enter");
+
     await tab.click("#dest");
     await tab.type("#dest",destination);
     await tab.waitForTimeout(500);
     await tab.keyboard.press("Enter");
+
     await tab.click('#onward_cal');
     await tab.$eval('#onward_cal', el => el.value = '2021-04-15');
     await tab.click('#search_btn');
-    // await tab.waitForTimeout(2000);
+
     await tab.waitForSelector(".clearfix.row-one",{visible: true});
-    const trains = await tab.evaluate(() => {
+    const buses = await tab.evaluate(() => {
         
         const grabFromRow = (row, dataLoc) => {
             const ele=row.querySelector(dataLoc); // grab the TD
@@ -107,16 +101,16 @@ async function main2(browser) {
         }
 
         // defining selector
-        const TRAIN_ROW_SELECTOR = ".clearfix.row-one";
+        const BUS_ROW_SELECTOR = ".clearfix.row-one";
 
         // array to store data
         let data = [];
 
-        const trainRows = document.querySelectorAll(TRAIN_ROW_SELECTOR);
+        const busRows = document.querySelectorAll(BUS_ROW_SELECTOR);
 
         // looping over each team row
         let count = 0;
-        for(const tr of trainRows){
+        for(const tr of busRows){
                 count++;
                 data.push({
                   Name: grabFromRow(tr, ".travels.lh-24.f-bold.d-color"),
@@ -131,10 +125,8 @@ async function main2(browser) {
         return data
 });
 
-let ans =  JSON.stringify(trains, null, "\t");
-// console.log(ans);
+let ans =  JSON.stringify(buses, null, "\t");
 busResults=ans;
-// fs.writeFile('BusDetails.txt', ans, () => {});
 
 }
 
@@ -144,32 +136,29 @@ async function main3(browser) {
     let tab = tabs[0];
     await tab.goto("https://www.travolook.in/"); 
     await tab.waitForTimeout(2000);
-    // await tab.click("#modaladditionalPayment > div > div > div.modal-footer.p-1 > button");
+
     await tab.click("input.fly-from-input");
     await tab.type("input.fly-from-input",source);
     await tab.waitForTimeout(500);
-     await tab.keyboard.press("ArrowDown");
+    await tab.keyboard.press("ArrowDown");
     await tab.keyboard.press("Enter");
-    // await tab.waitForTimeout(5000);
+
     await tab.waitForSelector("input.fly-to-input",{visible: true});
     await tab.click("input.fly-to-input");
     await tab.type("input.fly-to-input",destination);
     await tab.waitForTimeout(500);
-     await tab.keyboard.press("ArrowDown");
-     await tab.keyboard.press("ArrowDown");
-
+    await tab.keyboard.press("ArrowDown");
+    await tab.keyboard.press("ArrowDown");
     await tab.keyboard.press("Enter");
+
     await tab.$eval("#Fly_depdate", el => {
         el.type='visible';
         el.value = '2021-04-15'});
     await tab.waitForTimeout(1000);
-    // await tab.click("#calendarModal > div > div > div.modal-header > button.btn.btn-primary.btn-calendar-save.mobileSaveDateButton");
     await tab.click("input[value='Search']");
     await tab.waitForSelector("div[class*='resultlist']:not([class*='offerdiv'])",{visible: true});
-    // await tab.waitForTimeout(5000);
-    // // await tab.click('.icon.icon-close.c-fs');
-    const trains = await tab.evaluate(() => {
-        
+    
+    const flights = await tab.evaluate(() => {
         const grabFromRow = (row, dataLoc) => {
             const ele=row.querySelector(dataLoc); // grab the TD
             if(ele){
@@ -178,16 +167,15 @@ async function main3(browser) {
         }
 
         // defining selector
-        const TRAIN_ROW_SELECTOR = "div[class*='resultlist']:not([class*='offerdiv'])";
+        const FLIGHT_ROW_SELECTOR = "div[class*='resultlist']:not([class*='offerdiv'])";
 
         // array to store data
         let data = [];
 
-        const trainRows = document.querySelectorAll(TRAIN_ROW_SELECTOR);
-        console.log("Last1" + trainRows.length);
+        const flightRows = document.querySelectorAll(FLIGHT_ROW_SELECTOR);
         let count = 0;
         // looping over each team row
-        for(const tr of trainRows){
+        for(const tr of flightRows){
             count++;
             console.log("2Last" + data.length);
                 data.push({
@@ -203,12 +191,8 @@ async function main3(browser) {
         return data
 });
 
-let ans = JSON.stringify(trains, null, "\t");
-// console.log(ans);
+let ans = JSON.stringify(flights, null, "\t");
 flightResult=ans;
-// let ans =  JSON.stringify(trains, null, "\t");
-
-// fs.writeFile('FlightDetails.txt', ans, () => {});
 
 }
 async function main(){
@@ -225,8 +209,6 @@ async function main(){
         fs.appendFile('JourneyDetailsFinal.txt',trainResults, () => {});
         fs.appendFile('JourneyDetailsFinal.txt',busResults, () => {});
         fs.appendFile('JourneyDetailsFinal.txt',flightResult, () => {});
- 
-
 }
 
 main();
